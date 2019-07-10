@@ -1,0 +1,6 @@
+vendor/
+paid_installments
+*.csv
+*.phar
+*.json
+*.lock
