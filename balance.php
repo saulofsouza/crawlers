@@ -54,10 +54,10 @@ foreach ($years as $year) {
         if (($handle = fopen("cities.csv", "r")) !== FALSE) {
             while (($data = fgetcsv($handle, 0, ",")) !== FALSE) {
                 ob_start();
-                echo "<p> $month/$year <br/> 
-                    Cidade: $data[1] <br/> 
-                    Estado: $data[2] <br/> 
-                    IBGE: $data[0] </p>";
+                echo "$month/$year 
+                    Cidade: $data[1]
+                    Estado: $data[2]
+                    IBGE: $data[0] \n ";
                 ob_flush();
                 ob_end_clean();
                 
@@ -96,7 +96,7 @@ foreach ($years as $year) {
 
                 if($crawler_get_info->filterXpath('//*[@id="mensagens"]/div')->count()) {
                     echo $crawler_get_info->filterXpath('//*[@id="mensagens"]/div')->text();
-                    echo '<br/>';
+                    echo "\n";
                 } else {
                     $crawler_get_info = makeRequest(
                         $client,
@@ -114,7 +114,7 @@ foreach ($years as $year) {
                         ]
                     );
 
-                    saveData($file, $client->getResponse()->getContent());
+                    saveData($file, $client->getResponse()->getContent(), $month . '/' . $year);
                 }
             }
             fclose($handle);
@@ -130,15 +130,35 @@ function makeRequest($client, $method, $url, $params = []) {
         $crawler = $client->request($method, $url, $params);
     } catch (\Exception $e) {
         echo 'Falha ao conectar ao servidor. Tentando novamente em 3 segundos\n';
-        echo $e->getMessage() . '<br>';
-        sleep(0.5);
+        echo $e->getMessage() . "/n";
+        sleep(0.4);
     }      
   }
-  sleep(0.5);
+  sleep(0.4);
   return $crawler;
 }
 
-function saveData($file, $content) {
-    $data = str_getcsv($content, ",");
-    fputcsv($file, $data);
+function saveData($file, $content, $date) {
+    $lines = explode(PHP_EOL, $content);
+    foreach ($lines as $line) {
+        $data = str_getcsv($line, ";");
+
+        if (strpos($data[0], 'IBGE') !== false) {
+            $ibge = str_replace('IBGE:', '', $data[0]);
+            $ibge = substr($ibge, 0, 6);
+        }
+
+        if (sizeof($data) < 5 || $data[4] == 'SALDO') {
+            echo 'Removed: ';  
+            var_dump($data);
+            echo "\n";
+        } else {
+            var_dump($data);
+            array_pop($data);
+            $data[5] = $ibge;
+            $data[6] = $date;
+            fputcsv($file, $data);
+        }
+    }
+    exit();
 }
