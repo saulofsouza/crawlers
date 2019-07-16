@@ -1,5 +1,5 @@
 vendor/
-paid_installments
+paid_installments/
 *.csv
 *.phar
 *.json
